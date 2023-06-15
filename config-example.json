@@ -1,0 +1,15 @@
+{
+  "C-R": "--- Required Configuration ---",
+  "authorization": "AAAAAAAAAAAAAAAAAAAAAAAAAA.BBBBBB.CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+  "application_id": "999999999999999999",
+  "guild_id": "1000000000000000000",
+  "channel_id": "1000000000000000000",
+  "session_id": "1145141919810eeeeeeeeeeeeeeeeeee",
+  "data_version": "1000000000000000000",
+  "data_id": "100000000000000000",
+  
+  "C-O": "--- Optional Configuration ---",
+  "proxy": "http://my.proxy",
+  "get_limit": 3,
+  "get_interval": 5000
+}

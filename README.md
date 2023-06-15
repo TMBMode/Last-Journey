@@ -1,2 +1,2 @@
-# Last-Journey
-Unofficial API for Midjourney 🛠 under development
+# Lastjourney
+ Unofficial API for Midjourney 🛠 under development
