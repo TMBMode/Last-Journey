@@ -35,7 +35,7 @@ rl.on('line', async (line) => {
       console.log(r);
       break;
     case 'v':
-      s = await s.variation(parseInt(cmd[1]));
+      s = s.variation(parseInt(cmd[1]));
       await s.send();
       r = await s.collect();
       console.log(r);

@@ -101,7 +101,7 @@ export class Session {
     if (!this.finished) return 'session not finished yet';
     if (this.type === 'upscale') return 'cannot operate on upscales';
     // create an upscale session
-    return new Session({
+    const session = new Session({
       type: 'upscale',
       prompt: this.prompt,
       from: {
@@ -109,8 +109,10 @@ export class Session {
         customId: this.options.u[x]
       }
     });
+    await session.send();
+    return await session.collect();
   }
-  async variation(x) {
+  variation(x) {
     if (!this.finished) return 'session not finished yet';
     if (this.type === 'upscale') return 'cannot operate on upscales';
     // create an variation session
