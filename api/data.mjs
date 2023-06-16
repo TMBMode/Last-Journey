@@ -22,7 +22,7 @@ export const headers = () => ({
 });
 
 // request body
-export const payload = (prompt) => ({
+export const imagine = (prompt) => JSON.stringify({
   type: 2,
   application_id: conf.application_id,
   guild_id: conf.guild_id,
@@ -41,3 +41,16 @@ export const payload = (prompt) => ({
     }]
   }
 });
+
+export const uv = (messageId, customId) => JSON.stringify({
+  type: 3,
+  application_id: conf.application_id,
+  guild_id: conf.guild_id,
+  channel_id: conf.channel_id,
+  session_id: conf.session_id,
+  message_id: messageId,
+  data: {
+    component_type: 2,
+    custom_id: customId
+  }
+})

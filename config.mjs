@@ -16,6 +16,7 @@ const data = JSON.parse(fs.readFileSync('./config.json'));
   (conf.data_id = data.data_id) &&
   (conf.get_limit = (data.get_limit || 3)) &&
   (conf.get_interval = (data.get_interval || 5000)) &&
+  (conf.get_timeout = (data.get_timeout || 120000)) &&
   ((conf.proxy = data.proxy || null) || 1)
 )
 ||

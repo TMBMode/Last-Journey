@@ -11,5 +11,6 @@
   "C-O": "--- Optional Configuration ---",
   "proxy": "http://my.proxy",
   "get_limit": 3,
-  "get_interval": 5000
+  "get_interval": 5000,
+  "get_timeout": 120000
 }
