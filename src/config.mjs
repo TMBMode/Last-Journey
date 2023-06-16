@@ -5,7 +5,7 @@ export const conf = {};
 
 // set `conf` values from `config.json`
 // asserting all values are truthy
-const data = JSON.parse(fs.readFileSync('./config.json'));
+const data = JSON.parse(fs.readFileSync('config.json'));
 (
   (conf.authorization = data.authorization) &&
   (conf.application_id = data.application_id) &&

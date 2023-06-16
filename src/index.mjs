@@ -8,7 +8,7 @@ const rl = readline.createInterface({
   prompt: ''
 });
 const input = (q) =>
-  new Promise((resolve, reject) => {
+  new Promise((resolve) => {
     rl.question(q, (a) => {
       resolve(a);
     });
@@ -49,11 +49,3 @@ rl.on('line', async (line) => {
       break;
   }
 });
-/*
-(async () => {
-  let s = new Session('misaka mikoto, fighting --niji 5');
-  await s.send();
-  let r = await s.collect();
-  console.log(r);
-})();
-*/

@@ -62,7 +62,7 @@ export class Session {
       // pass if it's not the prompt of this session
       if (!msg.content.match(new RegExp(`\\*\\*${this.prompt}\\*\\*`))) continue;
       // pass if not yet started painting
-      if (!msg.content.match(/ \(((fast)|(relaxed))\)$/)) continue;
+      if (this.type !== 'upscale' && !msg.content.match(/ \(((fast)|(relaxed))\)$/)) continue;
       // pass if there is a progress (not finished)
       if (msg.content.match(/\> \(\d+%\) \(/)) continue;
       // pass if in variation mode but not getting variations
@@ -70,9 +70,9 @@ export class Session {
       // pass if in upscale mode but not getting upscales
       if (this.type === 'upscale' && !msg.content.match(/- Image #\d/)) continue;
       // pass if there is no image
-      if (!msg.attachments) continue;
+      if (!msg.attachments[0]) continue;
       // get the results
-      this.imageUrl = msg.attachments[0].url;
+      this.imageUrl = msg.attachments?.[0].url;
       this.responseId = msg.id;
       for (let line of msg.components) {
         for (let item of line.components) {

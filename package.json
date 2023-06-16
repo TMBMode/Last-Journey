@@ -2,9 +2,9 @@
   "name": "lastjourney",
   "version": "1.0.0",
   "description": "why do I ever have to describe this",
-  "main": "index.mjs",
+  "main": "src/index.mjs",
   "scripts": {
-    "test": "echo ok"
+    "start": "node src/index.mjs"
   },
   "author": "TMBMode",
   "license": "MIT",
