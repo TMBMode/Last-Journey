@@ -3,6 +3,14 @@ import { baseUrl, proxyAgent, headers, imagine, uv } from "./data.mjs";
 import { log } from '../utils/logging.mjs';
 import { sleep } from "../utils/functions.mjs";
 
+// status codes
+export const STAT = {
+  ok: 201,
+  invalid: 400,
+  conflict: 409,
+  error: 500,
+}
+
 // count sessions
 let sessionCnt = 1;
 
@@ -11,18 +19,22 @@ export class Session {
     this.id = sessionCnt++; // autoincrement cnt
     this.startTime = Date.now(); // session create timestamp
     this.type = params.type ?? 'imagine'; // one of 'imagine', 'upscale', or 'variation'
-    this.from = params.from ?? {}; // for upscale/variation, { messageId, customId}
+    this.from = params.from ?? {}; // for upscale/variation, { messageId, customId }
     this.prompt = params.prompt; // original prompt
     this.finished = false; // flag for session done
     this.imageUrl = ''; // retrieved url when session finishes
     this.responseId = ''; // id of the response message
     this.options = { u: [''], v: ['']}; // upscale/variation custom id's (if applicable)
     this.headers = headers(); // request authorization headers
-    log.notice(`Create #${this.id}`);
+    log.notice(`Create #${this.id} "${this.prompt}"`);
   }
-  // send message to discord
+  /* 
+   * async Session.send()
+   * this => send status
+   * send message to discord
+   */
   async send() {
-    log.info(`Send #${this.id}`);
+    log.debug(`Send #${this.id}`);
     const res = await fetch(baseUrl.send, {
       mode: 'cors',
       method: 'POST',
@@ -32,16 +44,20 @@ export class Session {
         uv(this.from.messageId, this.from.customId)),
       agent: proxyAgent
     });
-    // ok stat codes 200-299
-    if (parseInt(res.status/100) === 2) {
+    // ok
+    if (res.ok) {
       log.notice(`#${this.id} Send OK ${res.status}`);
-      return true;
+      return STAT.ok;
     }
     // non-ok
     log.error(`#${this.id} Send Error ${res.status}`);
-    return false;
+    return STAT.error;
   }
-  // fetch till the image request finishes
+  /*
+   * async Session.collect()
+   * this => result image url
+   * fetch messages till desired response found
+   */
   async collect() {
     // check for timeout
     if (Date.now() - this.startTime > conf.get_timeout) return null;
@@ -70,10 +86,11 @@ export class Session {
       // pass if in upscale mode but not getting upscales
       if (this.type === 'upscale' && !msg.content.match(/- Image #\d/)) continue;
       // pass if there is no image
-      if (!msg.attachments[0]) continue;
+      if (!msg.attachments?.[0]) continue;
       // get the results
-      this.imageUrl = msg.attachments?.[0].url;
+      this.imageUrl = msg.attachments[0].url;
       this.responseId = msg.id;
+      // record u/v custom id's
       for (let line of msg.components) {
         for (let item of line.components) {
           if (item.label?.match(/^U\d$/)) {
@@ -85,9 +102,8 @@ export class Session {
       }
       // flag as done
       this.finished = true;
-      log.notice(`#${this.id} finished ` +
-        `in ${parseInt((Date.now() - this.startTime) / 1000)} seconds ` +
-        `(URL: ${this.imageUrl})`);
+      log.notice(`#${this.id} finished = ${parseInt((Date.now() - this.startTime) / 1000)}s`);
+      log.debug(`#${this.id} > ${this.imageUrl}`);
     }
     // recursive call
     if (!this.finished) {
@@ -97,9 +113,15 @@ export class Session {
       return this.imageUrl;
     }
   }
+  /*
+   * async Session.upscale()
+   * upscale id (1-4) => result image url
+   * send an upscale request and get the result
+   */
   async upscale(x) {
-    if (!this.finished) return 'session not finished yet';
-    if (this.type === 'upscale') return 'cannot operate on upscales';
+    if (!this.finished) return STAT.conflict;
+    if (this.type === 'upscale') return STAT.invalid;
+    if (!this.options.u[x]) return STAT.invalid;
     // create an upscale session
     const session = new Session({
       type: 'upscale',
@@ -112,10 +134,16 @@ export class Session {
     await session.send();
     return await session.collect();
   }
+  /*
+   * sync Session.variation()
+   * variation id (1-4) => new Session
+   * create a session for variation
+   */
   variation(x) {
-    if (!this.finished) return 'session not finished yet';
-    if (this.type === 'upscale') return 'cannot operate on upscales';
-    // create an variation session
+    if (!this.finished) return STAT.conflict;
+    if (this.type === 'upscale') return STAT.invalid;
+    if (!this.options.v[x]) return STAT.invalid;
+    // create a variation session
     return new Session({
       type: 'variation',
       prompt: this.prompt,

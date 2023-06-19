@@ -1,13 +1,14 @@
 import 'isomorphic-fetch';
 import readline from 'readline';
 import { Session } from './api/session.mjs';
+import { toHere } from './api/here.mjs';
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
   prompt: ''
-});
-const input = (q) =>
+}),
+input = (q) =>
   new Promise((resolve) => {
     rl.question(q, (a) => {
       resolve(a);
@@ -32,7 +33,7 @@ rl.on('line', async (line) => {
       break;
     case 'collect':
       r = await s.collect();
-      console.log(r);
+      console.log(await toHere(r));
       break;
     case 'v':
       s = s.variation(parseInt(cmd[1]));

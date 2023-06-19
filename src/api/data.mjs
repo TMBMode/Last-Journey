@@ -18,10 +18,11 @@ export const proxyAgent = (
 // request headers
 export const headers = () => ({
   'Content-Type': 'application/json',
+  'User-Agent': conf.user_agent,
   'Authorization': conf.authorization
 });
 
-// request body
+// imagine request body
 export const imagine = (prompt) => JSON.stringify({
   type: 2,
   application_id: conf.application_id,
@@ -42,6 +43,7 @@ export const imagine = (prompt) => JSON.stringify({
   }
 });
 
+// upscale/variation request body
 export const uv = (messageId, customId) => JSON.stringify({
   type: 3,
   application_id: conf.application_id,

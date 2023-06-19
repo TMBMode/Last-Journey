@@ -1,5 +1,7 @@
 import { getTime } from "./functions.mjs";
 
+const isDebug = process.env.debug ?? true;
+
 const reset = '\x1b[0m',
       bright = '\x1b[1m',
       yellow = '\x1b[33m',
@@ -23,8 +25,13 @@ function notice(text) {
   console.log(`${bright}${green}[${getTime()}] NOTICE | ${text}${reset}`);
 }
 
+function debug(text) {
+  isDebug &&
+  console.log(`${bright}${cyan}[${getTime()}] DEBUG | ${text}${reset}`);
+}
+
 export const log = {
-  info, warn, error, notice
+  info, warn, error, notice, debug
 };
 
 export const color = {

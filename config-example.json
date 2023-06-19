@@ -9,6 +9,7 @@
   "data_id": "100000000000000000",
   
   "C-O": "--- Optional Configuration ---",
+  "user_agent": "Chrome/114.0.0.0",
   "proxy": "http://my.proxy",
   "get_limit": 3,
   "get_interval": 5000,
