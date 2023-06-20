@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lastjourney</title>
+  <link rel="stylesheet" href="./res/base.css">
+  <style>
+    body {
+      background-color: var(--dark);
+      color: var(--light);
+    }
+    #container {
+      position: fixed;
+      width: 70vmin;
+      aspect-ratio: 1;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #flipper {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 5%;
+      box-shadow: rgba(0,0,0,.16) 0px 3px 6px, rgba(0,0,0,.23) 0px 3px 6px;
+      perspective: 2vmax;
+      transform-origin: center right;
+      transform-style: preserve-3d;
+      transition: transform 1s ease;
+    }
+    #flipper.flip {
+      transform: translateX(-100%) rotate3d(0, 1, 0, 180deg);
+    }
+    #flipper > .face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 5%;
+      backface-visibility: hidden;
+      overflow: hidden;
+    }
+    #result {
+      background-color: black;
+    }
+    #result > .image {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 5%;
+      opacity: 0;
+      transition: opacity 2s cubic-bezier(.5,.5,.5,-1);
+    }
+    #result > .progress {
+      position: absolute;
+      width: 0%;
+      height: 100%;
+      transition: width 1s ease;
+      background-color: rgb(127,255,212);
+      box-shadow: rgba(127,255,212,8) 10px 0px, rgba(127,255,212,.6) 20px 0px, rgba(127,255,212,.4) 30px 0px, rgba(127,255,212,.2) 40px 0px, rgba(127,255,212,.1) 50px 0px;
+    }
+    #result > .hint {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--light);
+    }
+    #crafter {
+      display: flex;
+      flex-direction: column;
+      background-color: var(--light);
+      color: var(--dark);
+      padding: 2%;
+      transform: rotate3d(0, 1, 0, 180deg);
+    }
+    #crafter span {
+      font-size: .8em;
+      opacity: .8;
+      margin: .2em;
+    }
+    #crafter .br {
+      height: .6em;
+    }
+    #crafter .rowflex {
+      display: flex;
+      flex-direction: row;
+      height: 70%;
+      width: 70%;
+      justify-content: space-between;
+      overflow-y: auto;
+    }
+    #crafter .colflex {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    #crafter .prompt {
+      height: 30%;
+      border-radius: 5px;
+      resize: none;
+    }
+    #crafter #finish {
+      position: absolute;
+      width: 20%;
+      aspect-ratio: 1;
+      right: 3%;
+      bottom: 3%;
+      border: 2px black solid;
+      border-radius: 50%;
+    }
+    #crafter #finish > img {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%;
+      aspect-ratio: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container">
+    <div id="flipper" class="flip">
+      <div id="result" class="face">
+        <div class="progress"></div>
+        <div class="hint"></div>
+        <img class="image" alt="result" src="">
+      </div>
+      <div id="crafter" class="face">
+        <span>提示词（请使用英文）</span>
+        <textarea class="prompt"></textarea>
+        <div class="rowflex">
+          <div class="colflex">
+            <div class="br"></div>
+            <span>模型选择</span>
+            <select name="model" class="model">
+              <option value="--v 5.1">Midjourney 5.1</option>
+              <option value="--v 5.1 --style raw">Midjourney 5.1 Raw</option>
+              <option value="--v 5">Midjourney 5</option>
+              <option value="--v 4">Midjourney 4</option>
+              <option value="--niji 5">Niji 5</option>
+              <option value="--niji 5 --style cute">Niji 5 Cute</option>
+              <option value="--niji 5 --style expressive">Niji 5 Expressive</option>
+              <option value="--niji 5 --style original">Niji 5 Original</option>
+              <option value="--niji 5 --style scenic">Niji 5 Scenic</option>
+            </select>
+            <div class="br"></div>
+            <span>宽高比</span>
+            <select name="aspect-ratio" class="aspect-ratio">
+              <option value="--ar 1:1">1 : 1</option>
+              <option value="--ar 4:5" disabled>1 : 1.25</option>
+              <option value="--ar 2:3" disabled>1 : 1.5</option>
+              <option value="--ar 4:7" disabled>1 : 1.75</option>
+              <option value="--ar 1:2" disabled>1 : 2</option>
+              <option value="--ar 5:4" disabled>1.25 : 1</option>
+              <option value="--ar 3:2" disabled>1.5 : 1</option>
+              <option value="--ar 7:4" disabled>1.75 : 1</option>
+              <option value="--ar 2:1" disabled>2 : 1</option>
+            </select>
+            <div class="br"></div>
+            <span>随机性</span>
+            <select name="chaos" class="chaos">
+              <option value="--c 0">低（默认）</option>
+              <option value="--c 25">中</option>
+              <option value="--c 50">较高</option>
+              <option value="--c 75">高</option>
+              <option value="--c 100">极高</option>
+            </select>
+            <div class="br"></div>
+            <span>出图模式</span>
+            <select name="mode" class="mode">
+              <option value="fast">快速免排队</option>
+              <option value="relaxed" disabled>慢速队列</option>
+            </select>
+            <div class="br"></div>
+            <span>智能翻译</span>
+            <select name="translate" class="translate">
+              <option value="off">关</option>
+              <option value="on" disabled>（暂不支持）</option>
+            </select>
+          </div>
+        </div>
+        <div id="finish">
+          <img src="./res/send.png">
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="./lastjourney.js"></script>
+</body>

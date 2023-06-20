@@ -5,6 +5,7 @@ import { log } from '../utils/logging.mjs';
 import { pipeline } from 'stream/promises';
 
 export const toHere = async (url) => {
+  log.debug(`Download start ${url}`);
   const sfx = url.match(/\.((png)|(jpg)|(webp))$/)?.[0];
   if (!sfx) return null;
   const res = await fetch(url, {

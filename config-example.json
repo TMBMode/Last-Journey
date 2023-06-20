@@ -12,6 +12,6 @@
   "user_agent": "Chrome/114.0.0.0",
   "proxy": "http://my.proxy",
   "get_limit": 3,
-  "get_interval": 5000,
-  "get_timeout": 120000
+  "get_interval": 5,
+  "session_timeout": 120
 }

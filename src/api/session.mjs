@@ -1,7 +1,7 @@
 import { conf } from "../config.mjs";
 import { baseUrl, proxyAgent, headers, imagine, uv } from "./data.mjs";
 import { log } from '../utils/logging.mjs';
-import { sleep } from "../utils/functions.mjs";
+import { sleep, generateUid } from "../utils/functions.mjs";
 
 // status codes
 export const STAT = {
@@ -11,12 +11,9 @@ export const STAT = {
   error: 500,
 }
 
-// count sessions
-let sessionCnt = 1;
-
 export class Session {
   constructor(params) {
-    this.id = sessionCnt++; // autoincrement cnt
+    this.id = params.id ?? generateUid(6); // (useless?) identifier
     this.startTime = Date.now(); // session create timestamp
     this.type = params.type ?? 'imagine'; // one of 'imagine', 'upscale', or 'variation'
     this.from = params.from ?? {}; // for upscale/variation, { messageId, customId }
@@ -60,9 +57,12 @@ export class Session {
    */
   async collect() {
     // check for timeout
-    if (Date.now() - this.startTime > conf.get_timeout) return null;
+    if (Date.now() - this.startTime > (conf.session_timeout * 1000)) {
+      log.error(`#${this.id} timeout`);
+      return null;
+    }
     // we need a lullaby here
-    await sleep(conf.get_interval);
+    await sleep(conf.get_interval * 1000);
     // alright let's go
     const res = await fetch(baseUrl.retrieve, {
       mode: 'cors',
@@ -114,16 +114,17 @@ export class Session {
     }
   }
   /*
-   * async Session.upscale()
-   * upscale id (1-4) => result image url
-   * send an upscale request and get the result
+   * sync Session.upscale()
+   * upscale id (1-4) => new Session
+   * create a session for upscale
    */
-  async upscale(x) {
+  upscale(x) {
     if (!this.finished) return STAT.conflict;
     if (this.type === 'upscale') return STAT.invalid;
     if (!this.options.u[x]) return STAT.invalid;
     // create an upscale session
-    const session = new Session({
+    return new Session({
+      id: `${this.id}u${x}`,
       type: 'upscale',
       prompt: this.prompt,
       from: {
@@ -131,8 +132,6 @@ export class Session {
         customId: this.options.u[x]
       }
     });
-    await session.send();
-    return await session.collect();
   }
   /*
    * sync Session.variation()
@@ -145,6 +144,7 @@ export class Session {
     if (!this.options.v[x]) return STAT.invalid;
     // create a variation session
     return new Session({
+      id: `${this.id}v${x}`,
       type: 'variation',
       prompt: this.prompt,
       from: {

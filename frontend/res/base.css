@@ -1,0 +1,17 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  position: relative;
+  font-weight: normal;
+}
+
+body {
+  user-select: none;
+}
+
+:root {
+  --dark: #334;
+  --light: #CCD;
+}
