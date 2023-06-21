@@ -33,6 +33,9 @@
     #flipper.flip {
       transform: translateX(-100%) rotate3d(0, 1, 0, 180deg);
     }
+    #flipper.move {
+      transform: translateY(var(--uv-move-up));
+    }
     #flipper > .face {
       position: absolute;
       width: 100%;
@@ -50,15 +53,19 @@
       height: 100%;
       border-radius: 5%;
       opacity: 0;
-      transition: opacity 2s cubic-bezier(.5,.5,.5,-1);
+      transition: opacity 2s cubic-bezier(.5,1,.5,-1);
     }
     #result > .progress {
       position: absolute;
       width: 0%;
-      height: 100%;
+      height: 10%;
       transition: width 1s ease;
       background-color: rgb(127,255,212);
-      box-shadow: rgba(127,255,212,8) 10px 0px, rgba(127,255,212,.6) 20px 0px, rgba(127,255,212,.4) 30px 0px, rgba(127,255,212,.2) 40px 0px, rgba(127,255,212,.1) 50px 0px;
+      box-shadow: 
+      rgba(127,255,212,.8) 10px 0px,
+      rgba(127,255,212,.6) 20px 0px,
+      rgba(127,255,212,.4) 30px 0px,
+      rgba(127,255,212,.2) 40px 0px;
     }
     #result > .hint {
       position: absolute;
@@ -66,6 +73,7 @@
       top: 50%;
       transform: translate(-50%, -50%);
       color: var(--light);
+      font-size: 1.5em;
     }
     #crafter {
       display: flex;
@@ -117,6 +125,35 @@
       transform: translate(-50%, -50%);
       width: 70%;
       aspect-ratio: 1;
+    }
+    #buttons {
+      position: absolute;
+      width: 100%;
+      height: 15vh;
+      top: 105%;
+      transform: translateY(var(--uv-move-up));
+      display: flex;
+      flex-wrap: wrap;
+      padding: 1%;
+      border-radius: 4px;
+      background-color: var(--light-trans);
+      opacity: 0;
+      transition: opacity .5s;
+      pointer-events: none;
+    }
+    #buttons > .button {
+      width: 18%;
+      flex-shrink: 0;
+      flex-grow: 0;
+      margin: 1%;
+      border-radius: 4px;
+      background-color: var(--dark);
+    }
+    #buttons > .button > span {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
     }
   </style>
 </head>
@@ -186,6 +223,38 @@
         <div id="finish">
           <img src="./res/send.png">
         </div>
+      </div>
+    </div>
+    <div id="buttons">
+      <div class="button" onclick="upscale(1)">
+        <span>U1</span>
+      </div>
+      <div class="button" onclick="upscale(2)">
+        <span>U2</span>
+      </div>
+      <div class="button" onclick="upscale(3)">
+        <span>U3</span>
+      </div>
+      <div class="button" onclick="upscale(4)">
+        <span>U4</span>
+      </div>
+      <div class="button" onclick="reroll()">
+        <span>🔄</span>
+      </div>
+      <div class="button" onclick="variation(1)">
+        <span>V1</span>
+      </div>
+      <div class="button" onclick="variation(2)">
+        <span>V2</span>
+      </div>
+      <div class="button" onclick="variation(3)">
+        <span>V3</span>
+      </div>
+      <div class="button" onclick="variation(4)">
+        <span>V4</span>
+      </div>
+      <div class="button" onclick="exitSession()">
+        <span>❌</span>
       </div>
     </div>
   </div>

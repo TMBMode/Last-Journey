@@ -8,10 +8,12 @@ const sleep = (ms) => (
 );
 
 let stat = 'free';
+let currentSession = null;
 
 const dom = {
   flipper: $('#flipper'),
   resultImage: $('#result > .image'),
+  actionButtons: $('#buttons'),
   progress: {
     bar: $('#result > .progress'),
     hint: $('#result > .hint')
@@ -27,8 +29,33 @@ const dom = {
   sendButton: $('#crafter #finish')
 };
 
-const flip = () => {
-  dom.flipper.classList.toggle('flip');
+const flip = (x) => {
+  if (x) {
+    dom.flipper.classList.remove('move');
+    dom.flipper.classList.add('flip');
+  } else {
+    dom.flipper.classList.remove('flip');
+  }
+}
+const showButtons = (x) => {
+  if (x) {
+    dom.flipper.classList.remove('flip');
+    dom.flipper.classList.add('move');
+    dom.actionButtons.style.opacity = '1';
+    dom.actionButtons.style.pointerEvents = 'auto';
+  } else {
+    dom.flipper.classList.remove('move');
+    dom.actionButtons.style.opacity = '0';
+    dom.actionButtons.style.pointerEvents = 'none';
+  }
+}
+const showImage = (url) => {
+  if (url) {
+    dom.resultImage.src = url;
+    dom.resultImage.style.opacity = 1;
+  } else {
+    dom.resultImage.style.opacity = 0;
+  }
 }
 
 const progress = {
@@ -42,59 +69,90 @@ const progress = {
       dom.progress.hint.textContent = `${parseInt(this.value)}%`;
     }, 400);
   },
-  stop: () => {
+  stop: () => new Promise((resolve) => {
     clearInterval(this.loop);
-    dom.progress.bar.style.width = `0%`;
-    dom.progress.hint.textContent = '';
-  }
+    dom.progress.bar.style.width = `100%`;
+    dom.progress.hint.textContent = '100%';
+    setTimeout(() => {
+      dom.progress.bar.style.width = `0%`;
+      dom.progress.hint.textContent = '';
+      resolve();
+    }, 500)
+  })
 };
 
 // prompt => id
-const imagine = async (prompt) => {
-  const res = await fetch('/create', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'auth': 'lastjourney/ojbk'
-    },
-    body: JSON.stringify({
-      type: 'imagine',
-      prompt
-    })
-  });
-  if (!res.ok) {
-    return alert(`imagine error ${res.status}`);
+class Session {
+  constructor(params) {
+    this.type = params.type ?? 'imagine';
+    this.prompt = params.prompt;
+    this.from = params.from ?? {}
+    this.id = null;
+    this.imageUrl = null;
   }
-  return await res.text();
+  // params => this.id
+  async send() {
+    const res = await fetch('/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'auth': 'lastjourney/ojbk'
+      },
+      body: JSON.stringify({
+        type: this.type,
+        prompt: this.prompt,
+        id: this.from.id,
+        num: this.from.num
+      })
+    });
+    if (!res.ok) {
+      return alert(`send error ${res.status}`);
+    }
+    return this.id = await res.text();
+  }
+  // this.id => this.imageUrl
+  async collect() {
+    await sleep(10000);
+    const res = await fetch('/result', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'auth': 'lastjourney/ojbk'
+      },
+      body: JSON.stringify({
+        id: this.id
+      })
+    });
+    if (res.status === 504) {
+      return this.collect();
+    } else if (!res.ok) {
+      return alert(res.status);
+    }
+    return this.imageUrl = await res.text();
+  }
+  // run it
+  async run() {
+    if (stat !== 'free') return alert('有正在进行的任务');
+    stat = 'working';
+    flip(false);
+    showButtons(false);
+    showImage(false);
+    progress.start();
+    await this.send();
+    await this.collect();
+    await progress.stop();
+    showImage(this.imageUrl);
+    setTimeout(() => {
+      showButtons(true);
+    }, 1500);
+    return stat = 'free';
+  }
 }
 
-// id => url
-const collect = async (id) => {
-  await sleep(10000);
-  const res = await fetch('/result', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'auth': 'lastjourney/ojbk'
-    },
-    body: JSON.stringify({
-      id
-    })
-  });
-  if (res.status === 504) {
-    return collect(id);
-  } else if (!res.ok) {
-    return alert(res.status);
-  }
-  return await res.text();
-}
-
+// onclick imagine
 dom.sendButton.onclick = async () => {
-  if (stat !== 'free') return;
-  stat = 'working';
   const basePrompt = dom.crafter.prompt.value.replace('\n','');
   if (!basePrompt) {
-    stat = 'free';
     return alert('内容不能为空');
   }
   const prompt = 
@@ -102,11 +160,50 @@ dom.sendButton.onclick = async () => {
     dom.crafter.model.value + ' ' +
     dom.crafter.aspectRatio.value + ' ' +
     dom.crafter.chaos.value;
-  const id = await imagine(prompt);
-  flip();
-  progress.start();
-  const url = await collect(id);
-  progress.stop();
-  dom.resultImage.src = url;
-  dom.resultImage.style.opacity = 1;
+  currentSession = new Session({
+    type: 'imagine',
+    prompt
+  });
+  await currentSession.run();
+};
+
+// button bound upscale
+const upscale = async (x) => {
+  currentSession = new Session({
+    type: 'upscale',
+    from: {
+      id: currentSession.id,
+      num: x
+    }
+  });
+  await currentSession.run();
+}
+
+// button bound variation
+const variation = async (x) => {
+  currentSession = new Session({
+    type: 'variation',
+    from: {
+      id: currentSession.id,
+      num: x
+    }
+  });
+  await currentSession.run();
+}
+
+// button bound reroll
+const reroll = async () => {
+  currentSession = new Session({
+    type: 'imagine',
+    prompt: currentSession.prompt
+  });
+  await currentSession.run();
+}
+
+// button bound exit
+const exitSession = () => {
+  if (stat !== 'free') return alert('有绘图任务未结束');
+  showButtons(false);
+  showImage(false);
+  flip(true);
 }
