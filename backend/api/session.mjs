@@ -2,6 +2,8 @@ import { conf } from "../config.mjs";
 import { baseUrl, proxyAgent, headers, imagine, uv } from "./data.mjs";
 import { log } from '../utils/logging.mjs';
 import { sleep, generateUid } from "../utils/functions.mjs";
+import { toHere } from "./here.mjs";
+import db from "../db/index.mjs";
 
 // status codes
 export const STAT = {
@@ -9,20 +11,20 @@ export const STAT = {
   invalid: 400,
   conflict: 409,
   error: 500,
-}
+};
 
 export class Session {
   constructor(params) {
-    this.id = params.id ?? generateUid(6); // (useless?) identifier
+    this.id = params.id ?? generateUid(6); // identifier
     this.startTime = Date.now(); // session create timestamp
     this.type = params.type ?? 'imagine'; // one of 'imagine', 'upscale', or 'variation'
     this.from = params.from ?? {}; // for upscale/variation, { messageId, customId }
     this.prompt = params.prompt; // original prompt
     this.finished = false; // flag for session done
     this.imageUrl = ''; // retrieved url when session finishes
-    this.responseId = ''; // id of the response message
-    this.options = { u: [''], v: ['']}; // upscale/variation custom id's (if applicable)
-    this.headers = headers(); // request authorization headers
+    this.hereUrl = ''; // hereified image url
+    this.messageId = ''; // id of the response message
+    this.customId = ''; // custom id for upscale/variation (if applicable)
     log.notice(`Create #${this.id} "${this.prompt}"`);
   }
   /* 
@@ -32,10 +34,28 @@ export class Session {
    */
   async send() {
     log.debug(`Send #${this.id}`);
+    // if we have something with the same id in the database
+    // then we can just skip sending
+    const dbRes = await db.getSession(this.id);
+    if (dbRes) {
+      log.info(`#${this.id} duplicate, skip send`);
+      // pack data
+      this.hereUrl = dbRes.imageUrl;
+      this.messageId = dbRes.messageId;
+      this.customId = dbRes.customId;
+      this.finished = true;
+      // overwrite collect
+      this.collect = async () => {
+        log.notice(`#${this.id} > ${dbRes.imageUrl}`);
+        return dbRes.imageUrl;
+      };
+      return STAT.ok;
+    }
+    // normal send
     const res = await fetch(baseUrl.send, {
       mode: 'cors',
       method: 'POST',
-      headers: this.headers,
+      headers: headers,
       body: (this.type === 'imagine' ?
         imagine(this.prompt) :
         uv(this.from.messageId, this.from.customId)),
@@ -43,19 +63,21 @@ export class Session {
     });
     // ok
     if (res.ok) {
-      log.notice(`#${this.id} Send OK ${res.status}`);
+      log.info(`#${this.id} send ok ${res.status}`);
       return STAT.ok;
     }
     // non-ok
-    log.error(`#${this.id} Send Error ${res.status}`);
+    log.error(`#${this.id} send error ${res.status}`);
     return STAT.error;
   }
   /*
    * async Session.collect()
-   * this => result image url
-   * fetch messages till desired response found
+   * this => result image url (hereified)
+   * also saves data into this
+   * fetch messages till desired response found, then save
    */
   async collect() {
+    log.debug('Collect results');
     // check for timeout
     if (Date.now() - this.startTime > (conf.session_timeout * 1000)) {
       log.error(`#${this.id} timeout`);
@@ -67,7 +89,7 @@ export class Session {
     const res = await fetch(baseUrl.retrieve, {
       mode: 'cors',
       method: 'GET',
-      headers: this.headers,
+      headers: headers,
       agent: proxyAgent
     });
     // handle retrieved message list
@@ -87,23 +109,25 @@ export class Session {
       if (this.type === 'upscale' && !msg.content.match(/- Image #\d/)) continue;
       // pass if there is no image
       if (!msg.attachments?.[0]) continue;
+      // pass if we already operated on this message
+      if (await db.existsMessageId(msg.id)) continue;
+      // now we can assume this is the message we want
       // get the results
       this.imageUrl = msg.attachments[0].url;
-      this.responseId = msg.id;
-      // record u/v custom id's
-      for (let line of msg.components) {
-        for (let item of line.components) {
-          if (item.label?.match(/^U\d$/)) {
-            this.options.u.push(item.custom_id);
-          } else if (item.label?.match(/^V\d$/)) {
-            this.options.v.push(item.custom_id);
-          }
-        }
-      }
-      // flag as done
-      this.finished = true;
+      this.messageId = msg.id;
+      // record custom id
+      this.customId = msg.components?.[0]?.components?.[0]?.custom_id?.split('::').pop();
+      // hereify url
+      this.hereUrl = '/' + await toHere(this.imageUrl, this.id);
+      // save to database
+      await db.saveSession(this);
+      // do some logging
+      log.debug(`#${this.id} custom id ${this.customId}`);
       log.notice(`#${this.id} finished = ${parseInt((Date.now() - this.startTime) / 1000)}s`);
-      log.debug(`#${this.id} > ${this.imageUrl}`);
+      log.notice(`#${this.id} > ${this.hereUrl}`);
+      // done!
+      this.finished = true;
+      break;
     }
     // recursive call
     if (!this.finished) {
@@ -121,15 +145,15 @@ export class Session {
   upscale(x) {
     if (!this.finished) return STAT.conflict;
     if (this.type === 'upscale') return STAT.invalid;
-    if (!this.options.u[x]) return STAT.invalid;
+    if (!this.customId) return STAT.invalid;
     // create an upscale session
     return new Session({
-      id: `${this.id}u${x}`,
+      id: `${this.id}-U${x}`,
       type: 'upscale',
       prompt: this.prompt,
       from: {
-        messageId: this.responseId,
-        customId: this.options.u[x]
+        messageId: this.messageId,
+        customId: `MJ::JOB::upsample::${x}::${this.customId}`
       }
     });
   }
@@ -141,15 +165,15 @@ export class Session {
   variation(x) {
     if (!this.finished) return STAT.conflict;
     if (this.type === 'upscale') return STAT.invalid;
-    if (!this.options.v[x]) return STAT.invalid;
+    if (!this.customId) return STAT.invalid;
     // create a variation session
     return new Session({
-      id: `${this.id}v${x}`,
+      id: `${this.id}-V${x}`,
       type: 'variation',
       prompt: this.prompt,
       from: {
-        messageId: this.responseId,
-        customId: this.options.v[x]
+        messageId: this.messageId,
+        customId: `MJ::JOB::variation::${x}::${this.customId}`
       }
     });
   }

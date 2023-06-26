@@ -4,7 +4,7 @@ import { generateUid } from '../utils/functions.mjs';
 import { log } from '../utils/logging.mjs';
 import { pipeline } from 'stream/promises';
 
-export const toHere = async (url) => {
+export const toHere = async (url, id) => {
   log.debug(`Download start ${url}`);
   const sfx = url.match(/\.((png)|(jpg)|(webp))$/)?.[0];
   if (!sfx) return null;
@@ -13,7 +13,7 @@ export const toHere = async (url) => {
     agent: proxyAgent
   });
   if (!res.ok) return null;
-  const dest = `here/${generateUid(6)}${sfx}`;
+  const dest = `here/${id ?? generateUid(6)}${sfx}`;
   const file = fs.createWriteStream(dest);
   await pipeline(res.body, file);
   file.end();

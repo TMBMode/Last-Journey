@@ -16,11 +16,11 @@ export const proxyAgent = (
 );
 
 // request headers
-export const headers = () => ({
+export const headers = {
   'Content-Type': 'application/json',
   'User-Agent': conf.user_agent,
   'Authorization': conf.authorization
-});
+};
 
 // imagine request body
 export const imagine = (prompt) => JSON.stringify({

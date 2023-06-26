@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lastjourney</title>
-  <link rel="stylesheet" href="./res/base.css">
+  <link rel="stylesheet" href="./css/base.css">
   <style>
     body {
       background-color: var(--dark);
@@ -13,8 +13,8 @@
     }
     #container {
       position: fixed;
-      width: 70vmin;
-      aspect-ratio: 1;
+      width: var(--container-size);
+      height: var(--container-size);
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
@@ -24,11 +24,12 @@
       width: 100%;
       height: 100%;
       border-radius: 5%;
-      box-shadow: rgba(0,0,0,.16) 0px 3px 6px, rgba(0,0,0,.23) 0px 3px 6px;
+      box-shadow: rgba(255,255,255,.16) -2px 3px 6px, rgba(255,255,255,.23) 2px 3px 6px;
       perspective: 2vmax;
       transform-origin: center right;
       transform-style: preserve-3d;
       transition: transform 1s ease;
+      z-index: 1;
     }
     #flipper.flip {
       transform: translateX(-100%) rotate3d(0, 1, 0, 180deg);
@@ -54,6 +55,8 @@
       border-radius: 5%;
       opacity: 0;
       transition: opacity 1s ease .5s;
+      background-image: url('./img/placeholder.png');
+      background-size: 100% 100%;
     }
     #result > .progress {
       position: absolute;
@@ -83,13 +86,19 @@
       padding: 2%;
       transform: rotate3d(0, 1, 0, 180deg);
     }
+    #crafter textarea {
+      font-size: 1em;
+    }
+    #crafter select {
+      font-size: .8em;
+    }
     #crafter span {
       font-size: .8em;
       opacity: .8;
       margin: .2em;
     }
     #crafter .br {
-      height: .6em;
+      height: .4em;
     }
     #crafter .rowflex {
       display: flex;
@@ -112,7 +121,7 @@
     #crafter #finish {
       position: absolute;
       width: 20%;
-      aspect-ratio: 1;
+      padding-top: 20%;
       right: 3%;
       bottom: 3%;
       border: 2px black solid;
@@ -124,7 +133,6 @@
       top: 50%;
       transform: translate(-50%, -50%);
       width: 70%;
-      aspect-ratio: 1;
     }
     #buttons {
       position: absolute;
@@ -141,6 +149,10 @@
       transition: opacity .5s;
       pointer-events: none;
     }
+    #buttons.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
     #buttons > .button {
       width: 18%;
       flex-shrink: 0;
@@ -149,11 +161,97 @@
       border-radius: 4px;
       background-color: var(--dark);
     }
+    #buttons > .button.disabled {
+      pointer-events: none;
+      opacity: .2;
+    }
     #buttons > .button > span {
       position: absolute;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
+    }
+    #backdrop {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0,0,0,.32);
+      opacity: 0;
+      transition: opacity .5s;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #gallery {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 61.8%;
+      max-width: 300px;
+      height: 0vh;
+      transition: height .5s;
+      background-color: var(--mid);
+      overflow-x: hidden;
+      overflow-y: auto;
+      z-index: 110;
+    }
+    #gallery.show {
+      height: 100vh;
+      z-index: 110;
+    }
+    #gallery > .toggler {
+      position: fixed;
+      left: 1vmin;
+      top: 1vmin;
+      width: 10vh;
+      height: 10vh;
+      z-index: 12;
+    }
+    #gallery > .toggler > img {
+      width: 100%;
+      height: 100%;
+    }
+    #gallery > .list {
+      width: 100%;
+      margin-top: 12vmin;
+      display: flex;
+      flex-direction: column-reverse;
+      font-size: .8em;
+    }
+    #gallery > .list > .item {
+      width: 90%;
+      height: 12vh;
+      flex-shrink: 0;
+      flex-grow: 0;
+      margin: 0 5% .8em;
+      border-radius: 5px;
+      background-color: var(--dark);
+    }
+    #gallery > .list > .item > .main {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      max-height: 100%;
+      padding: .2em;
+      text-align: center;
+      color: var(--light);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-y: auto;
+    }
+    #gallery > .list > .item > .sub {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      font-size: .8em;
+      color: var(--light-trans);
     }
   </style>
 </head>
@@ -187,15 +285,15 @@
             <div class="br"></div>
             <span>宽高比</span>
             <select name="aspect-ratio" class="aspect-ratio">
-              <option value="--ar 1:1">1 : 1</option>
-              <option value="--ar 4:5" disabled>1 : 1.25</option>
-              <option value="--ar 2:3" disabled>1 : 1.5</option>
-              <option value="--ar 4:7" disabled>1 : 1.75</option>
-              <option value="--ar 1:2" disabled>1 : 2</option>
-              <option value="--ar 5:4" disabled>1.25 : 1</option>
-              <option value="--ar 3:2" disabled>1.5 : 1</option>
-              <option value="--ar 7:4" disabled>1.75 : 1</option>
-              <option value="--ar 2:1" disabled>2 : 1</option>
+              <option value="--ar 1:1">1:1</option>
+              <option value="--ar 4:5" disabled>4:5</option>
+              <option value="--ar 2:3" disabled>2:3</option>
+              <option value="--ar 9:16" disabled>9:16</option>
+              <option value="--ar 1:2" disabled>1:2</option>
+              <option value="--ar 5:4" disabled>5:4</option>
+              <option value="--ar 3:2" disabled>3:2</option>
+              <option value="--ar 16:9" disabled>16:9</option>
+              <option value="--ar 2:1" disabled>2:1</option>
             </select>
             <div class="br"></div>
             <span>随机性</span>
@@ -220,41 +318,61 @@
             </select>
           </div>
         </div>
-        <div id="finish">
-          <img src="./res/send.png">
+        <div id="finish" onclick="imagine()">
+          <img src="./img/send.png">
         </div>
       </div>
     </div>
     <div id="buttons">
-      <div class="button" onclick="upscale(1)">
+      <div class="button u" onclick="upscale(1)">
         <span>U1</span>
       </div>
-      <div class="button" onclick="upscale(2)">
+      <div class="button u" onclick="upscale(2)">
         <span>U2</span>
       </div>
-      <div class="button" onclick="upscale(3)">
+      <div class="button u" onclick="upscale(3)">
         <span>U3</span>
       </div>
-      <div class="button" onclick="upscale(4)">
+      <div class="button u" onclick="upscale(4)">
         <span>U4</span>
       </div>
-      <div class="button" onclick="reroll()">
+      <div class="button r" onclick="reroll()">
         <span>🔄</span>
       </div>
-      <div class="button" onclick="variation(1)">
+      <div class="button v" onclick="variation(1)">
         <span>V1</span>
       </div>
-      <div class="button" onclick="variation(2)">
+      <div class="button v" onclick="variation(2)">
         <span>V2</span>
       </div>
-      <div class="button" onclick="variation(3)">
+      <div class="button v" onclick="variation(3)">
         <span>V3</span>
       </div>
-      <div class="button" onclick="variation(4)">
+      <div class="button v" onclick="variation(4)">
         <span>V4</span>
       </div>
-      <div class="button" onclick="exitSession()">
+      <div class="button exit" onclick="exitSession()">
         <span>❌</span>
+      </div>
+    </div>
+  </div>
+  <div id="backdrop" onclick="toggleGallery()"></div>
+  <div id="gallery">
+    <div class="toggler" onclick="toggleGallery()">
+      <img src="./img/collections.png">
+    </div>
+    <div class="list">
+      <div class="item">
+        <span class="main">Lastjourney</span>
+        <span class="sub">#114514</span>
+      </div>
+      <div class="item">
+        <span class="main">Lastjourney > V2</span>
+        <span class="sub">#114514-V2</span>
+      </div>
+      <div class="item">
+        <span class="main">Lastjourney > V2 > U3</span>
+        <span class="sub">#114514-V2-U3</span>
       </div>
     </div>
   </div>

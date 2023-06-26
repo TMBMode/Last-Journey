@@ -1,0 +1,47 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  position: relative;
+  font-weight: normal;
+}
+
+body {
+  user-select: none;
+}
+
+img {
+  -webkit-user-drag: none;
+}
+
+:root {
+  font-size: 18px;
+  --dark: #334;
+  --light: #CCD;
+  --mid: #778;
+  --light-trans: rgba(204,204,221,.5);
+  --container-size: 70vmin;
+  --uv-move-up: -10vh;
+}
+
+@media (min-height: 100vw) {
+  :root {
+    font-size: 16px;
+    --container-size: 90vmin;
+    --uv-move-up: -5vh;
+  }
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--light);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px var(--light) solid;
+  background-color: var(--dark);
+}

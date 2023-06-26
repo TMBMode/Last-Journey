@@ -2,9 +2,9 @@
   "name": "lastjourney",
   "version": "1.0.0",
   "description": "why do I ever have to describe this",
-  "main": "src/index.mjs",
+  "main": "backend/index.mjs",
   "scripts": {
-    "start": "node src/index.mjs"
+    "start": "node backend/index.mjs"
   },
   "author": "TMBMode",
   "license": "MIT",
@@ -12,6 +12,7 @@
     "dotenv": "^16.1.4",
     "express": "^4.18.2",
     "https-proxy-agent": "^7.0.0",
-    "isomorphic-fetch": "^3.0.0"
+    "isomorphic-fetch": "^3.0.0",
+    "sqlite3": "^5.1.6"
   }
 }
