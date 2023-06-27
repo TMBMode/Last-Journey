@@ -56,9 +56,7 @@ const dom = {
   },
   crafter: {
     prompt: $('#crafter .prompt'),
-    model: $('#crafter .model'),
-    aspectRatio: $('#crafter .aspect-ratio'),
-    chaos: $('#crafter .chaos'),
+    attributes: $$('#crafter .attr'),
     mode: $('#crafter .mode'),
     translate: $('#crafter .translate')
   },
@@ -270,11 +268,10 @@ const imagine = async () => {
   if (!basePrompt) {
     return alert('内容不能为空');
   }
-  const prompt = 
-    basePrompt + ' ' +
-    dom.crafter.model.value + ' ' +
-    dom.crafter.aspectRatio.value + ' ' +
-    dom.crafter.chaos.value;
+  let prompt = basePrompt;
+  for (let attr of dom.crafter.attributes) {
+    prompt += ` ${attr.value}`;
+  }
   currentSession = new Session({
     type: 'imagine',
     basePrompt,

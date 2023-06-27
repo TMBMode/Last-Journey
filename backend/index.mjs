@@ -22,6 +22,13 @@ input = (q) =>
 );
 
 const sessions = []; // session pool
+const ips = []; // ip record
+
+app.use((req, res, next) => {
+  const ip = req.headers['x-real-ip'] || req.ip || 'N/A';
+  ips[ip] = ips[ip] ? ips[ip] + 1 : 1;
+  next();
+});
 
 app.use('/here', express.static('here', {
   index: false,
@@ -63,6 +70,8 @@ const ensureSession = async (id) => {
  * => id (plain text)
  */
 app.post('/create', async (req, res) => {
+  const ip = req.headers['x-real-ip'] || req.ip || 'N/A';
+  log.info(`Create request from <${ip}>`);
   const type = req.body.type;
   if (!type) return res.status(400).send('invalid');
   let session;
@@ -137,6 +146,9 @@ rl.on('line', async (line) => {
       break;
     case 'lsdb':
       console.table(await db.getAllSessions());
+      break;
+    case 'lsip':
+      console.table(ips);
       break;
     default:
       console.log('Unknown command');
