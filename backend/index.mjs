@@ -119,13 +119,30 @@ app.post('/result', async (req, res) => {
   const s = sessions[id];
   if (!s) return res.status(404).send('not found');
   if (!s.finished) return res.status(504).send('not finished');
+  if (!s.hereUrl) return res.status(500).send('server error');
   return res.status(200).send(s.hereUrl);
 });
 
 // listen it
 const PORT = process.env.PORT ?? 32767;
 app.listen(PORT, () => {
-  log.notice(`App listening on port ${PORT}`);
+  log.notice(`
+          __
+         / /
+        / /
+       / /
+      / /        _
+     / /        \\_/    Lastjourney v1.0.0
+    / /        __
+   / /        / /
+  / /________/ /    Listening
+ /__________  /    on Port ${PORT}
+           / /
+          / /
+         / /
+      __/ /
+      \\__/
+  `);
 });
 
 // command interface

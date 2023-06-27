@@ -1,6 +1,7 @@
 import { getTime } from "./functions.mjs";
 
 const isDebug = process.env.debug ?? true;
+info(`Debug: ${isDebug}`);
 
 const reset = '\x1b[0m',
       bright = '\x1b[1m',

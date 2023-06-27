@@ -81,6 +81,7 @@ export class Session {
     // check for timeout
     if (Date.now() - this.startTime > (conf.session_timeout * 1000)) {
       log.error(`#${this.id} timeout`);
+      this.finished = true;
       return null;
     }
     // we need a lullaby here
