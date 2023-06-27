@@ -1,6 +1,4 @@
 # Lastjourney
-Unofficial API + WebUI for Midjourney 🛠
+Yet another Midjourney WebUI
 
-> I know there's lots out there, so I'll make this a programming practice!
-
-Inspired by [Gitee: jiayifei/mjrobot](https://gitee.com/jiayifei/mjrobot)
+> Why am I doing this again?
