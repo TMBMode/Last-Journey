@@ -199,11 +199,11 @@
       background-color: var(--mid);
       overflow-x: hidden;
       overflow-y: auto;
-      z-index: 110;
+      z-index: 11;
     }
     #gallery.show {
       height: 100vh;
-      z-index: 110;
+      z-index: 11;
     }
     #gallery > .toggler {
       position: fixed;
@@ -254,6 +254,35 @@
       font-size: .8em;
       color: var(--light-trans);
     }
+    #auth {
+      position: fixed;
+      width: 30vmin;
+      height: 10vmin;
+      right: 1vmin;
+      top: 1vmin;
+      border-radius: 5px;
+      background-color: var(--mid);
+      display: flex;
+      flex-direction: column;
+      z-index: 2;
+    }
+    #auth > .remaining {
+      flex: 1;
+      font-size: 3vmin;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+    }
+    #auth > .remaining > .count {
+      font-size: 4vmin;
+    }
+    #auth > .expireDate {
+      flex: 0;
+      font-size: 2vmin;
+      text-align: center;
+      border-top: 2px var(--dark) solid;
+    }
   </style>
 </head>
 
@@ -273,6 +302,7 @@
             <div class="br"></div>
             <span>模型选择</span>
             <select name="model" class="attr">
+              <option value="--v 5.2">Midjourney 5.2</option>
               <option value="--v 5.1">Midjourney 5.1</option>
               <option value="--v 5.1 --style raw">Midjourney 5.1 Raw</option>
               <option value="--v 5">Midjourney 5</option>
@@ -384,6 +414,13 @@
         <span class="sub">#114514-V2-U3</span>
       </div>
     </div>
+  </div>
+  <div id="auth" onclick="updateAuth()">
+    <div class="remaining">
+      <span>剩余次数：</span>
+      <div class="count">0</div>
+    </div>
+    <div class="expireDate">1919-8-10到期</div>
   </div>
   <script src="./lastjourney.js"></script>
 </body>

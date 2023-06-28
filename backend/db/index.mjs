@@ -10,11 +10,12 @@ const db = new sqlite3.Database(
 
 const STAT = {
   ok: 201,
-  badRequest: 400,
-  unavailable: 409,
-  nonexistent: 404
+  notFound: 404,
+  limitReached: 401.1,
+  expired: 401.2
 };
 
+// session record
 db.run(`CREATE TABLE IF NOT EXISTS
   sessions (
     id TEXT NOT NULL UNIQUE,
@@ -24,6 +25,18 @@ db.run(`CREATE TABLE IF NOT EXISTS
     customId TEXT,
     imageUrl TEXT,
     timestamp INT
+  )`
+);
+
+// key record
+db.run(`CREATE TABLE IF NOT EXISTS
+  keys (
+    id TEXT NOT NULL UNIQUE,
+    name TEXT,
+    total INT,
+    remaining INT,
+    created INT,
+    expires INT
   )`
 );
 
@@ -43,9 +56,7 @@ const saveSession = (s) =>
 
 const getSession = (id) =>
   new Promise((resolve, reject) => {
-    db.get(`SELECT *
-      FROM sessions
-      WHERE id = ?`,
+    db.get(`SELECT * FROM sessions WHERE id = ?`,
       [id],
       (err, row) => {
         if (err) reject(err);
@@ -81,6 +92,80 @@ const existsMessageId = (messageId) =>
   }
 );
 
+const addKey = (p) =>
+  new Promise((resolve, reject) => {
+    db.run(`INSERT INTO 
+      keys (id, name, total, remaining, created, expires)
+      VALUES (?,?,?,?,?,?)`,
+      [p.id, p.name, p.count, p.count, Date.now(), p.expires],
+      (err) => {
+        if (err) reject(err);
+        resolve(STAT.ok);
+      }
+    );
+  }
+);
+
+const useKey = (key) =>
+  new Promise((resolve, reject) => {
+    db.get(`SELECT * FROM keys WHERE id = ?`,
+      [key],
+      (err, row) => {
+        if (err) reject(err);
+        else if (!row) resolve(STAT.notFound);
+        else if (row.expires < Date.now()) resolve(STAT.expired);
+        else if (row.remaining < 1) resolve(STAT.limitReached);
+        else {
+          db.run(`UPDATE keys SET remaining = remaining - 1 WHERE id = ?`,
+            [key],
+            (err) => {
+              if (err) reject(err);
+              resolve(STAT.ok);
+            }
+          );
+        }
+      }
+    );
+  }
+);
+
+const checkKey = (key) =>
+  new Promise((resolve, reject) => {
+    db.get(`SELECT * FROM keys WHERE id = ?`,
+      [key],
+      (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      }
+    );
+  }
+);
+
+const refundKey = (key) =>
+  new Promise((resolve, reject) => {
+    db.run(`UPDATE keys SET remaining = remaining + 1 WHERE id = ?`,
+      [key],
+      (err) => {
+        if (err) reject(err);
+        resolve(STAT.ok);
+      }
+    );
+  }
+);
+
+const getAllKeys = () =>
+  new Promise((resolve, reject) => {
+    db.all(`SELECT * FROM keys`,
+      (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      }
+    );
+  }
+);
+
 export default {
-  saveSession, getSession, getAllSessions, existsMessageId
+  STAT,
+  saveSession, getSession, getAllSessions, existsMessageId,
+  addKey, useKey, checkKey, refundKey, getAllKeys
 }

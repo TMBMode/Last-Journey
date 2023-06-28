@@ -20,6 +20,7 @@ console.log(`
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 const __name__ = '__main__';
+let authKey;
 
 const sleep = (ms) => (
   new Promise(resolve => setTimeout(resolve, ms))
@@ -56,6 +57,10 @@ const dom = {
     toggler: $('#gallery > .toggler'),
     backdrop: $('#backdrop'),
     list: $('#gallery > .list')
+  },
+  auth: {
+    count: $('#auth > .remaining > .count'),
+    expireDate: $('#auth > .expireDate')
   }
 };
 
@@ -182,7 +187,7 @@ class Session {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'auth': 'lastjourney/ojbk'
+        'auth': `lastjourney/${authKey ?? ''}`
       },
       body: JSON.stringify({
         type: this.type,
@@ -191,8 +196,14 @@ class Session {
         num: this.from.num
       })
     });
+    if (res.status === 402) {
+      return alert(`没有密钥，请输入后重试`);
+    }
+    if (res.status === 403) {
+      return alert(`密钥无效或已达使用限制`);
+    }
     if (!res.ok) {
-      return alert(`发生错误 ${res.status}`);
+      return alert(`发生未知错误 ${res.status}`);
     }
     return this.id = await res.text();
   }
@@ -203,7 +214,7 @@ class Session {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'auth': 'lastjourney/ojbk'
+        'auth': `lastjourney/${authKey ?? ''}`
       },
       body: JSON.stringify({
         id: this.id
@@ -243,9 +254,16 @@ class Session {
     showButtons(0);
     showImage(false);
     progress.start();
-    await this.send();
-    let res = await this.collect();
+    let res = await this.send();
+    // send failed
+    if (!res) {
+      await progress.stop();
+      showButtons(1);
+      return stat = 'free';
+    }
+    res = await this.collect();
     await progress.stop();
+    // collect failed
     if (!res) {
       showButtons(1);
       return stat = 'free';
@@ -256,6 +274,7 @@ class Session {
     if (this.type === 'upscale') showButtons(1);
     else if (this.type === 'variation') showButtons(2);
     else showButtons(3);
+    updateAuth(authKey);
     return stat = 'free';
   }
 }
@@ -322,6 +341,30 @@ const exitSession = () => {
   flip(true);
 }
 
+// button bound change and refresh auth key
+const updateAuth = async (key) => {
+  authKey = key ?? (prompt('🔑') ?? authKey);
+  let data = {
+    remaining: 0,
+    expires: '1970-01-01'
+  };
+  let res = await fetch('/checkauth', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'auth': `lastjourney/${authKey}`
+    }
+  });
+  if (res.ok) {
+    data = JSON.parse(await res.text());
+  }
+  dom.auth.count.textContent = data.remaining;
+  dom.auth.expireDate.textContent = `${data.expires}到期`;
+  return ls.set('authKey', authKey);
+}
+
 if (__name__ == '__main__') {
   updateCollections();
+  authKey = ls.get('authKey');
+  updateAuth(authKey);
 }

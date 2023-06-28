@@ -1,6 +1,6 @@
 {
   "name": "lastjourney",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "why do I ever have to describe this",
   "main": "backend/index.mjs",
   "scripts": {

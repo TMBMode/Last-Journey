@@ -2,7 +2,8 @@ import 'isomorphic-fetch';
 import readline from 'readline';
 import express from 'express';
 import { Session, STAT } from './api/session.mjs';
-import { log } from './utils/logging.mjs';
+import { tribool, generateUid, dateToString } from './utils/functions.mjs';
+import { log, color } from './utils/logging.mjs';
 import db from './db/index.mjs';
 
 const app = express();
@@ -20,6 +21,15 @@ input = (q) =>
     });
   }
 );
+const ask = async (q, p = '', d = null) => {
+  let a = undefined;
+  while (a === undefined) {
+    a = (await input(
+      `${color.bright}${color.cyan}${q}${color.reset}${(p||d)?' ':''}` +
+      `${color.cyan}${p}${d?`(${d})`:''}: ${color.reset}`
+    )) || d;
+  } return a;
+};
 
 const sessions = []; // session pool
 const ips = []; // ip record
@@ -48,8 +58,19 @@ app.use((req, res, next) => {
   const auth = req.get('auth')
     ?.match(/lastjourney\/[0-9a-zA-Z\-\+\_]+/)?.[0]
     ?.replace(/^lastjourney\//, '');
-  if (auth !== 'ojbk') return res.status(401).send('unauthorized');
+  req.auth = auth;
   next();
+});
+
+app.get('/checkauth', async (req, res) => {
+  log.info(`Check key <${req.auth}>`);
+  if (!req.auth) return res.status(400).send('what');
+  const dbRes = await db.checkKey(req.auth);
+  if (!dbRes) return res.status(404).send('not exists');
+  return res.status(200).send(JSON.stringify({
+    remaining: dbRes.remaining,
+    expires: dateToString(dbRes.expires)
+  }));
 });
 
 // id => database or memory has session ? place in memory, true : false
@@ -71,9 +92,16 @@ const ensureSession = async (id) => {
  */
 app.post('/create', async (req, res) => {
   const ip = req.headers['x-real-ip'] || req.ip || 'N/A';
-  log.info(`Create request from <${ip}>`);
+  log.debug(`Create request with key <${req.auth}>`);
+  // is request valid?
   const type = req.body.type;
   if (!type) return res.status(400).send('invalid');
+  if (!req.auth) return res.status(402).send('no auth');
+  // is key available?
+  const dbRes = await db.useKey(req.auth);
+  if (dbRes !== db.STAT.ok) return res.status(403).send('bad key');
+  // accept request, create session based on type
+  log.info(`Accept create request with key <${req.auth}> from ip <${ip}>`);
   let session;
   // imagine => new Session(prompt)
   if (type === 'imagine') {
@@ -119,7 +147,12 @@ app.post('/result', async (req, res) => {
   const s = sessions[id];
   if (!s) return res.status(404).send('not found');
   if (!s.finished) return res.status(504).send('not finished');
-  if (!s.hereUrl) return res.status(500).send('server error');
+  // if finished, then
+  sessions[id] = null;
+  if (!s.hereUrl) {
+    await db.refundKey(req.auth);
+    return res.status(500).send('server error');
+  }
   return res.status(200).send(s.hereUrl);
 });
 
@@ -132,11 +165,11 @@ app.listen(PORT, () => {
         / /
        / /
       / /        _
-     / /        \\_/    Lastjourney v1.0.0
+     / /        \\_/    Lastjourney v1.0.1
     / /        __
    / /        / /
   / /________/ /    Listening
- /__________  /    on Port ${PORT}
+ /__________  /    Port ${PORT}
            / /
           / /
          / /
@@ -144,6 +177,33 @@ app.listen(PORT, () => {
       \\__/
   `);
 });
+
+const inputAddKey = async () => {
+  const isFixedKey = await ask('Specify key?', '[Y/N]', 'N');
+  let key;
+  if (tribool(isFixedKey) === 1) {
+    key = await ask('Key');
+  } else key = generateUid();
+  const name = await ask('Name', '', 'N/A');
+  let count = NaN;
+  while (isNaN(count)) {
+    count = parseInt(await ask('Grant count', '[1-999]'));
+  }
+  let days = NaN;
+  while (isNaN(days)) {
+    days = parseFloat(await ask('Grant time', '[days]'));
+  }
+  const res = await db.addKey({
+    id: key,
+    name,
+    count,
+    expires: Date.now() + (days * 86400000)
+  });
+  if (res === db.STAT.ok) {
+    log.notice(`Add key ${key}`);
+  }
+  return;
+}
 
 // command interface
 rl.on('line', async (line) => {
@@ -161,8 +221,17 @@ rl.on('line', async (line) => {
     case 'stop':
       process.exit();
       break;
-    case 'lsdb':
+    case 'new':
+      await inputAddKey();
+      break;
+    case 'lsss':
+      console.table(sessions);
+      break;
+    case 'lsdbss':
       console.table(await db.getAllSessions());
+      break;
+    case 'lskeys':
+      console.table(await db.getAllKeys());
       break;
     case 'lsip':
       console.table(ips);

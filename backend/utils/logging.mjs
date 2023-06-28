@@ -27,8 +27,7 @@ function notice(text) {
 }
 
 function debug(text) {
-  isDebug &&
-  console.log(`${bright}${cyan}[${getTime()}] DEBUG | ${text}${reset}`);
+  if (isDebug) console.log(`${bright}${cyan}[${getTime()}] DEBUG | ${text}${reset}`);
 }
 
 export const log = {
