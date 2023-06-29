@@ -17,6 +17,7 @@ img {
 
 :root {
   font-size: 18px;
+  --vu: 1vmin;
   --dark: #334;
   --light: #CCD;
   --mid: #778;
@@ -27,7 +28,7 @@ img {
 
 @media (min-height: 100vw) {
   :root {
-    font-size: 16px;
+    --vu: 1.5vmin;
     --container-size: 90vmin;
     --uv-move-up: -5vh;
   }

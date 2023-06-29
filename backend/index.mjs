@@ -187,7 +187,7 @@ const inputAddKey = async () => {
   const name = await ask('Name', '', 'N/A');
   let count = NaN;
   while (isNaN(count)) {
-    count = parseInt(await ask('Grant count', '[1-999]'));
+    count = parseInt(await ask('Grant count', '[int]'));
   }
   let days = NaN;
   while (isNaN(days)) {

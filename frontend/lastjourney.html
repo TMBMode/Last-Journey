@@ -209,8 +209,8 @@
       position: fixed;
       left: 1vmin;
       top: 1vmin;
-      width: 10vmin;
-      height: 10vmin;
+      width: calc(10*var(--vu));
+      height: calc(10*var(--vu));
       z-index: 12;
     }
     #gallery > .toggler > img {
@@ -256,8 +256,8 @@
     }
     #auth {
       position: fixed;
-      width: 30vmin;
-      height: 10vmin;
+      width: calc(30*var(--vu));
+      height: calc(10*var(--vu));
       right: 1vmin;
       top: 1vmin;
       border-radius: 5px;
@@ -268,18 +268,18 @@
     }
     #auth > .remaining {
       flex: 1;
-      font-size: 3vmin;
+      font-size: calc(3*var(--vu));
       display: flex;
       flex-direction: row;
       align-items: center;
       justify-content: center;
     }
     #auth > .remaining > .count {
-      font-size: 4vmin;
+      font-size: calc(4*var(--vu));
     }
     #auth > .expireDate {
       flex: 0;
-      font-size: 2vmin;
+      font-size: calc(2*var(--vu));
       text-align: center;
       border-top: 2px var(--dark) solid;
     }

@@ -1,6 +1,6 @@
 import { getTime } from "./functions.mjs";
 
-const isDebug = process.env.debug ?? true;
+const isDebug = eval(process.env.DEBUG) ?? true;
 info(`Debug: ${isDebug}`);
 
 const reset = '\x1b[0m',
@@ -27,7 +27,8 @@ function notice(text) {
 }
 
 function debug(text) {
-  if (isDebug) console.log(`${bright}${cyan}[${getTime()}] DEBUG | ${text}${reset}`);
+  isDebug &&
+  console.log(`${bright}${cyan}[${getTime()}] DEBUG | ${text}${reset}`);
 }
 
 export const log = {
