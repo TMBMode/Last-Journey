@@ -165,7 +165,7 @@ app.listen(PORT, () => {
         / /
        / /
       / /        _
-     / /        \\_/    Lastjourney v1.0.1
+     / /        \\_/    Lastjourney v1.0.2
     / /        __
    / /        / /
   / /________/ /    Listening
@@ -183,7 +183,7 @@ const inputAddKey = async () => {
   let key;
   if (tribool(isFixedKey) === 1) {
     key = await ask('Key');
-  } else key = generateUid();
+  } else key = generateUid(8);
   const name = await ask('Name', '', 'N/A');
   let count = NaN;
   while (isNaN(count)) {
@@ -197,7 +197,7 @@ const inputAddKey = async () => {
     id: key,
     name,
     count,
-    expires: Date.now() + (days * 86400000)
+    expires: parseInt(Date.now() + (days * 86400000))
   });
   if (res === db.STAT.ok) {
     log.notice(`Add key ${key}`);
@@ -223,6 +223,9 @@ rl.on('line', async (line) => {
       break;
     case 'new':
       await inputAddKey();
+      break;
+    case 'del':
+      if (await db.deleteKey(cmd[1])) log.info(`Del key ${cmd[1]}`);
       break;
     case 'lsss':
       console.table(sessions);

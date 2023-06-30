@@ -343,7 +343,7 @@ const exitSession = () => {
 
 // button bound change and refresh auth key
 const updateAuth = async (key) => {
-  authKey = key ?? (prompt('🔑') ?? authKey);
+  authKey = key ?? (prompt('🔑') || authKey);
   let data = {
     remaining: 0,
     expires: '1970-01-01'

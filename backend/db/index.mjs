@@ -106,6 +106,18 @@ const addKey = (p) =>
   }
 );
 
+const deleteKey = (key) =>
+  new Promise((resolve, reject) => {
+    db.run(`DELETE FROM keys WHERE id = ?`,
+      [key],
+      (err) => {
+        if (err) reject(err);
+        resolve(STAT.ok);
+      }
+    );
+  }
+);
+
 const useKey = (key) =>
   new Promise((resolve, reject) => {
     db.get(`SELECT * FROM keys WHERE id = ?`,
@@ -167,5 +179,5 @@ const getAllKeys = () =>
 export default {
   STAT,
   saveSession, getSession, getAllSessions, existsMessageId,
-  addKey, useKey, checkKey, refundKey, getAllKeys
+  addKey, deleteKey, useKey, checkKey, refundKey, getAllKeys
 }

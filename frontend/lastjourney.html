@@ -9,8 +9,13 @@
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
   <style>
     body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
       background-color: var(--dark);
       color: var(--light);
+      background-image: url('./img/background.jpg');
+      background-size: 100% 100%;
     }
     #container {
       position: fixed;
@@ -126,6 +131,7 @@
       right: 3%;
       bottom: 3%;
       border: 2px black solid;
+      background-color: white;
       border-radius: 50%;
     }
     #crafter #finish > img {
