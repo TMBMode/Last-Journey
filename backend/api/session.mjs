@@ -105,7 +105,7 @@ export class Session {
       // pass if there is a progress (not finished)
       if (msg.content.match(/\> \(\d+%\) \(/)) continue;
       // pass if in variation mode but not getting variations
-      if (this.type === 'variation' && !msg.content.match(/- Variations by/)) continue;
+      if (this.type === 'variation' && !msg.content.match(/- Variations (\(.*\) )?by/)) continue;
       // pass if in upscale mode but not getting upscales
       if (this.type === 'upscale' && !msg.content.match(/- Image #\d/)) continue;
       // pass if there is no image

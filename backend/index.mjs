@@ -56,9 +56,9 @@ app.use('/', express.static('frontend', {
 
 app.use((req, res, next) => {
   const auth = req.get('auth')
-    ?.match(/lastjourney\/[0-9a-zA-Z\-\+\_]+/)?.[0]
+    ?.match(/lastjourney\/[0-9a-zA-Z\-\+\_%]+/)?.[0]
     ?.replace(/^lastjourney\//, '');
-  req.auth = auth;
+  req.auth = decodeURI(auth);
   next();
 });
 
