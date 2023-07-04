@@ -364,7 +364,9 @@ const updateAuth = async (key) => {
 }
 
 if (__name__ == '__main__') {
-  updateCollections();
-  authKey = ls.get('authKey');
-  updateAuth(authKey);
+  setTimeout(() => {
+    updateCollections();
+    authKey = ls.get('authKey');
+    updateAuth(authKey);
+  }, 0);
 }
