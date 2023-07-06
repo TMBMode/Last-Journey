@@ -99,7 +99,7 @@ export class Session {
       // pass if message isn't by bot
       if (msg.author.id !== conf.application_id) continue;
       // pass if it's not the prompt of this session
-      if (!msg.content.match(new RegExp(`\\*\\*${this.prompt}\\*\\*`))) continue;
+      if (!msg.content.includes(`**${this.prompt}**`)) continue;
       // pass if not yet started painting
       if (this.type !== 'upscale' && !msg.content.match(/ \(((fast)|(relaxed))\)$/)) continue;
       // pass if there is a progress (not finished)
