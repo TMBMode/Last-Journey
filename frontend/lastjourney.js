@@ -37,13 +37,15 @@ let currentSession = null;
 
 const dom = {
   flipper: $('#flipper'),
+  resultFace: $('#result'),
   resultImage: $('#result > .image'),
   buttons: $('#buttons'),
   uvButtons: $$('#buttons > .button.u, #buttons > .button.v'),
   rerollButton: $('#buttons > .button.r'),
   progress: {
     bar: $('#result > .progress'),
-    hint: $('#result > .hint')
+    hint: $('#result > .hint'),
+    game: $('#result > iframe')
   },
   crafter: {
     prompt: $('#crafter .prompt'),
@@ -95,7 +97,7 @@ const showImage = (url) => {
   if (!url) {
     dom.resultImage.style.opacity = 0;
   } else {
-    dom.resultImage.src = './img/placeholder.png';
+    dom.resultImage.src = '';
     setTimeout(() => {
       dom.resultImage.src = url;
       dom.resultImage.style.opacity = 1;
@@ -112,6 +114,8 @@ const progress = {
   value: 0,
   loop: null,
   start: () => {
+    dom.resultFace.classList.add('loading');
+    dom.progress.game.contentWindow.postMessage('start', '*');
     this.value = 0;
     this.loop = setInterval(() => {
       this.value = Math.min(this.value + Math.random(), 99.99);
@@ -120,6 +124,8 @@ const progress = {
     }, 400);
   },
   stop: () => new Promise((resolve) => {
+    dom.resultFace.classList.remove('loading');
+    dom.progress.game.contentWindow.postMessage('pause', '*');
     clearInterval(this.loop);
     dom.progress.bar.style.width = `100%`;
     dom.progress.hint.textContent = '100%';
@@ -284,6 +290,11 @@ const imagine = async () => {
   const basePrompt = dom.crafter.prompt.value.replace('\n','').trim();
   if (!basePrompt) {
     return alert('内容不能为空');
+  }
+  const promptParams = basePrompt.match(/--\w+/g)
+    .filter(item => item !== '--no');
+  if (promptParams.length) {
+    return alert(`提示词不能包含参数：${promptParams}`);
   }
   let prompt = basePrompt;
   for (let attr of dom.crafter.attributes) {
