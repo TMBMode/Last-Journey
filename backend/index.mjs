@@ -108,8 +108,8 @@ app.post('/create', async (req, res) => {
     const prompt = req.body.prompt;
     if (!prompt) return res.status(400).send('invalid');
     const promptParams = prompt.match(/--\w+/g)
-      .filter(item => item !== '--no');
-    if (promptParams.length) {
+      ?.filter(item => item !== '--no');
+    if (promptParams?.length) {
       return res.status(400).send('cannot include params');
     }
     session = new Session({
