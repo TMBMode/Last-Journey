@@ -292,8 +292,8 @@ const imagine = async () => {
     return alert('内容不能为空');
   }
   const promptParams = basePrompt.match(/--\w+/g)
-    .filter(item => item !== '--no');
-  if (promptParams.length) {
+    ?.filter(item => item !== '--no');
+  if (promptParams?.length) {
     return alert(`提示词不能包含参数：${promptParams}`);
   }
   let prompt = basePrompt;
