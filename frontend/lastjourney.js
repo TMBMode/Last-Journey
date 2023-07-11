@@ -34,6 +34,7 @@ const ls = {
 
 let stat = 'free';
 let currentSession = null;
+let sessions = [];
 
 const dom = {
   flipper: $('#flipper'),
@@ -142,45 +143,46 @@ const progress = {
 };
 // read from local storage and update
 const updateCollections = () => {
+  sessions = [];
   dom.gallery.list.innerHTML = '';
   const collections = ls.get('collections');
   for (let item of (collections ?? [])) {
+    sessions.push({
+      imageUrl: item.imageUrl,
+      previewUrl: item.previewUrl,
+      session: new Session({
+        type: 'imagine',
+        id: item.id,
+        basePrompt: item.basePrompt,
+        prompt: item.prompt
+      })
+    });
     dom.gallery.list.innerHTML += `
-      <div class="item" onclick="gotoSession(
-          '${item.id}',
-          '${item.imageUrl?.replaceAll("'", "\\'")}',
-          '${item.previewUrl?.replaceAll("'", "\\'")}',
-          '${item.basePrompt?.replaceAll("'", "\\'")}',
-          '${item.prompt?.replaceAll("'", "\\'")}'
-        )">
+      <div class="item" onclick="gotoSession(${sessions.length-1})">
         <span class="main"> ${item.basePrompt} </span>
         <span class="sub"> #${item.id} </span>
       </div>
     `;
   }
 };
-// rebuild session from data
-const gotoSession = (id, imageUrl, previewUrl, basePrompt, prompt) => {
+// retrieve session from id
+const gotoSession = (i) => {
   // don't run it, just goto image
   flip(false);
+  const s = sessions[i];
   // session before the preview update
-  if (previewUrl === 'undefined') {
-    previewUrl = imageUrl;
+  if (s.previewUrl === 'undefined') {
+    s.previewUrl = s.imageUrl;
   }
-  showImage(imageUrl, previewUrl);
+  showImage(s.imageUrl, s.previewUrl);
   // match basePrompt for upscales
-  if (basePrompt.match(/ > U[1-4]$/)) {
+  if (s.session.basePrompt.match(/ > U[1-4]$/)) {
     return showButtons(1);
   }
   // otherwise we need to enable u/v
-  currentSession = new Session({
-    type: 'imagine',
-    id,
-    basePrompt,
-    prompt
-  });
+  currentSession = s.session;
   // no reroll for variations
-  if (basePrompt.match(/ > V[1-4]$/)) {
+  if (s.session.basePrompt.match(/ > V[1-4]$/)) {
     return showButtons(2);
   }
   return showButtons(3);
