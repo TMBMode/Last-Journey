@@ -239,10 +239,9 @@ class Session {
   }
   // add to history collections
   async toCollections() {
-    console.log('to collections');
     const collections = ls.get('collections') ?? [];
     // skip if something with the same id exists
-    // oh god fuck why does [].filter() return a truthy []?
+    // empty [] == false, but [] ? 1 : 0 == 1... wtf?
     if (collections.filter((item) => (item.id === this.id)).length) return;
     // append
     ls.set('collections', [...collections, {
@@ -300,6 +299,7 @@ const imagine = async () => {
   for (let attr of dom.crafter.attributes) {
     prompt += ` ${attr.value}`;
   }
+  prompt = prompt.trim();
   currentSession = new Session({
     type: 'imagine',
     basePrompt,

@@ -78,6 +78,7 @@ const ensureSession = async (id) => {
   if (sessions[id]) return true;
   const data = await db.getSession(id);
   if (!data) return false;
+  log.debug(`Recover #${id}`);
   const s = new Session(data);
   s.finished = true;
   s.messageId = data.messageId;

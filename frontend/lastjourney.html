@@ -337,6 +337,7 @@
             <span>模型选择</span>
             <select name="model" class="attr">
               <option value="--v 5.2">Midjourney 5.2</option>
+              <option value="--v 5.2 --style raw">Midjourney 5.2 Raw</option>
               <option value="--v 5.1">Midjourney 5.1</option>
               <option value="--v 5.1 --style raw">Midjourney 5.1 Raw</option>
               <option value="--v 5">Midjourney 5</option>
@@ -364,31 +365,47 @@
             <span>艺术化</span>
             <select name="stylize" class="attr">
               <option value="--s 50">低</option>
-              <option value="--s 100" selected>中（默认）</option>
+              <option value="" selected>中（默认）</option>
               <option value="--s 250">高</option>
               <option value="--s 750">极高</option>
             </select>
             <div class="br"></div>
             <span>随机性</span>
             <select name="chaos" class="attr">
-              <option value="--c 0" selected>低（默认）</option>
+              <option value="" selected>低（默认）</option>
               <option value="--c 25">中</option>
               <option value="--c 50">较高</option>
               <option value="--c 75">高</option>
               <option value="--c 100">极高</option>
             </select>
             <div class="br"></div>
-            <span>出图模式</span>
-            <select name="mode" class="mode">
-              <option value="fast">快速免排队</option>
-              <option value="relaxed" disabled>慢速队列</option>
+            <span>作品质量</span>
+            <select name="quality" class="attr">
+              <option value="--q .25">低</option>
+              <option value="--q .5">中</option>
+              <option value="" selected>高（默认）</option>
             </select>
             <div class="br"></div>
+            <span>完成度</span>
+            <select name="stop" class="attr">
+              <option value="--stop 25">25%</option>
+              <option value="--stop 50">50%</option>
+              <option value="--stop 75">75%</option>
+              <option value="" selected>100%（默认）</option>
+            </select>
+            <div class="br"></div>
+            <span>出图模式</span>
+            <select name="mode" class="mode">
+              <option value="turbo" disabled>臻享急速（暂不支持）</option>
+              <option value="fast" selected>智能快速</option>
+              <option value="relaxed" disabled>节约低速（暂无必要）</option>
+            </select>
+            <!--<div class="br"></div>
             <span>智能翻译</span>
             <select name="translate" class="translate">
               <option value="off">关</option>
               <option value="on" disabled>（暂不支持）</option>
-            </select>
+            </select>-->
           </div>
         </div>
         <div id="finish" onclick="imagine()">
