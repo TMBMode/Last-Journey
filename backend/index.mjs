@@ -150,11 +150,14 @@ app.post('/result', async (req, res) => {
   if (!s.finished) return res.status(504).send('not finished');
   // if finished, then
   sessions[id] = null;
-  if (!s.hereUrl) {
+  if (!(s.hereUrl && s.previewUrl)) {
     await db.refundKey(req.auth);
     return res.status(500).send('server error');
   }
-  return res.status(200).send(s.hereUrl);
+  return res.status(200).send(JSON.stringify({
+    'full': s.hereUrl,
+    'preview': s.previewUrl
+  }));
 });
 
 // listen it
@@ -166,7 +169,7 @@ app.listen(PORT, () => {
         / /
        / /
       / /        _
-     / /        \\_/    Lastjourney v1.0.2
+     / /        \\_/    Lastjourney v1.0.3
     / /        __
    / /        / /
   / /________/ /    Listening

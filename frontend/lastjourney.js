@@ -38,7 +38,8 @@ let currentSession = null;
 const dom = {
   flipper: $('#flipper'),
   resultFace: $('#result'),
-  resultImage: $('#result > .image'),
+  resultLink: $('#result > a'),
+  resultImage: $('#result .image'),
   buttons: $('#buttons'),
   uvButtons: $$('#buttons > .button.u, #buttons > .button.v'),
   rerollButton: $('#buttons > .button.r'),
@@ -92,14 +93,17 @@ const showButtons = (x) => {
     dom.buttons.classList.remove('show');
   }
 }
-// url = string / null => show image with url / not show
-const showImage = (url) => {
+// url = string / null, preview = string / null => show image with url (and preview) / not show
+const showImage = (url, preview) => {
   if (!url) {
+    dom.resultLink.style.pointerEvents = 'none';
     dom.resultImage.style.opacity = 0;
   } else {
     dom.resultImage.src = '';
     setTimeout(() => {
-      dom.resultImage.src = url;
+      dom.resultLink.style.pointerEvents = 'auto';
+      dom.resultLink.href = url;
+      dom.resultImage.src = preview || url;
       dom.resultImage.style.opacity = 1;
     }, 0);
   }
@@ -145,6 +149,7 @@ const updateCollections = () => {
       <div class="item" onclick="gotoSession(
           '${item.id}',
           '${item.imageUrl?.replaceAll("'", "\\'")}',
+          '${item.previewUrl?.replaceAll("'", "\\'")}',
           '${item.basePrompt?.replaceAll("'", "\\'")}',
           '${item.prompt?.replaceAll("'", "\\'")}'
         )">
@@ -155,10 +160,14 @@ const updateCollections = () => {
   }
 };
 // rebuild session from data
-const gotoSession = (id, imageUrl, basePrompt, prompt) => {
+const gotoSession = (id, imageUrl, previewUrl, basePrompt, prompt) => {
   // don't run it, just goto image
   flip(false);
-  showImage(imageUrl);
+  // session before the preview update
+  if (previewUrl === 'undefined') {
+    previewUrl = imageUrl;
+  }
+  showImage(imageUrl, previewUrl);
   // match basePrompt for upscales
   if (basePrompt.match(/ > U[1-4]$/)) {
     return showButtons(1);
@@ -186,6 +195,7 @@ class Session {
     this.from = params.from ?? {}
     this.id = params.id ?? null;
     this.imageUrl = params.imageUrl ?? null;
+    this.previewUrl = params.previewUrl ?? null;
   }
   // params => this.id
   async send() {
@@ -235,7 +245,10 @@ class Session {
     if (!res.ok) {
       return alert(`发生未知错误 ${res.status}`);
     }
-    return this.imageUrl = await res.text();
+    const url = JSON.parse(await res.text());
+    this.imageUrl = url.full;
+    this.previewUrl = url.preview;
+    return this.imageUrl && this.previewUrl;
   }
   // add to history collections
   async toCollections() {
@@ -247,6 +260,7 @@ class Session {
     ls.set('collections', [...collections, {
       id: this.id,
       imageUrl: this.imageUrl,
+      previewUrl: this.previewUrl,
       basePrompt: this.basePrompt,
       prompt: this.prompt
     }]);
@@ -273,7 +287,7 @@ class Session {
       showButtons(1);
       return stat = 'free';
     }
-    showImage(this.imageUrl);
+    showImage(this.imageUrl, this.previewUrl);
     this.toCollections();
     updateCollections();
     if (this.type === 'upscale') showButtons(1);

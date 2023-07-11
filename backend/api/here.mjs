@@ -6,14 +6,14 @@ import { pipeline } from 'stream/promises';
 
 export const toHere = async (url, id) => {
   log.debug(`Download start ${url}`);
-  const sfx = url.match(/\.((png)|(jpg)|(webp))$/)?.[0];
-  if (!sfx) return null;
+  const ext = url.match(/\.((png)|(jpg)|(webp))$/)?.[0];
+  if (!ext) return null;
   const res = await fetch(url, {
     method: "GET",
     agent: proxyAgent
   });
   if (!res.ok) return null;
-  const dest = `here/${id ?? generateUid(6)}${sfx}`;
+  const dest = `here/${id ?? generateUid(6)}${ext}`;
   const file = fs.createWriteStream(dest);
   await pipeline(res.body, file);
   file.end();

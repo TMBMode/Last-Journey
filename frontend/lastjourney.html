@@ -66,7 +66,12 @@
     #result {
       background-color: black;
     }
-    #result > .image {
+    #result > a {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+    #result .image {
       position: absolute;
       width: 100%;
       height: 100%;
@@ -325,7 +330,9 @@
       <div id="result" class="face">
         <div class="progress"></div>
         <div class="hint"></div>
-        <img class="image" alt="result" src="">
+        <a target="_blank">
+          <img class="image" alt="result" src="">
+        </a>
         <iframe src="moz-breakout.html"></iframe>
       </div>
       <div id="crafter" class="face">

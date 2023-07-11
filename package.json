@@ -1,6 +1,6 @@
 {
   "name": "lastjourney",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "why do I ever have to describe this",
   "main": "backend/index.mjs",
   "scripts": {
@@ -13,6 +13,7 @@
     "express": "^4.18.2",
     "https-proxy-agent": "^7.0.0",
     "isomorphic-fetch": "^3.0.0",
+    "sharp": "^0.32.1",
     "sqlite3": "^5.1.6"
   }
 }

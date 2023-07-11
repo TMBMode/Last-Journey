@@ -3,6 +3,7 @@ import { baseUrl, proxyAgent, headers, imagine, uv } from "./data.mjs";
 import { log } from '../utils/logging.mjs';
 import { sleep, generateUid } from "../utils/functions.mjs";
 import { toHere } from "./here.mjs";
+import { toPreview } from "./preview.mjs";
 import db from "../db/index.mjs";
 
 // status codes
@@ -119,7 +120,12 @@ export class Session {
       // record custom id
       this.customId = msg.components?.[0]?.components?.[0]?.custom_id?.split('::').pop();
       // hereify url
-      this.hereUrl = '/' + await toHere(this.imageUrl, this.id);
+      this.hereUrl = await toHere(this.imageUrl, this.id);
+      // generate preview
+      this.previewUrl = await toPreview(this.hereUrl);
+      // add '/' for external access
+      this.hereUrl = '/' + this.hereUrl;
+      this.previewUrl = '/' + this.previewUrl;
       // save to database
       await db.saveSession(this);
       // do some logging
