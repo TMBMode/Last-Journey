@@ -313,7 +313,7 @@ const imagine = async () => {
   }
   let prompt = basePrompt;
   for (let attr of dom.crafter.attributes) {
-    prompt += ` ${attr.value}`;
+    prompt += `${attr.value && ' '}${attr.value}`;
   }
   prompt = prompt.trim();
   currentSession = new Session({
